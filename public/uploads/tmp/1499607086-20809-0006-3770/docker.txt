@@ -1,0 +1,143 @@
+---- host の作業
+--hostの設定 (CentOS 7)
+hostにて, firewall を確認, 停止
+	確認
+	systemctl is-enabled firewalld
+	systemctl is-enabled iptables
+	停止
+	systemctl stop firewalld
+	OS起動時に自動起動しなくする
+	systemctl disable firewalld
+	確認
+	systemctl is-enabled firewalld
+
+hostに httpd (webサーバ) を install
+	yum -y install httpd
+	service httpd restart
+	systemctl enable httpd
+
+◆◆◆ここまでやった◆◆◆
+
+
+-- dockerの設定
+service docker start
+
+
+---- 姫野ベンチ
+docker pull centos:centos6
+docker images
+
+sh all.sh
+sh get.sh
+grep MFLOPS _himeno_all.txt  | grep measu
+ MFLOPS measured : 129.114256   cpu : 60.628888
+ MFLOPS measured : 129.109877   cpu : 59.773537
+ MFLOPS measured : 130.380880   cpu : 58.948256
+ MFLOPS measured : 129.189669   cpu : 62.184841
+ MFLOPS measured : 129.425237   cpu : 60.605398
+ MFLOPS measured : 130.928874   cpu : 58.097607
+ MFLOPS measured : 128.251174   cpu : 59.803829
+ MFLOPS measured : 127.429306   cpu : 59.817233
+ MFLOPS measured : 128.256719   cpu : 59.554640
+ MFLOPS measured : 127.358585   cpu : 59.726278
+ MFLOPS measured : 129.626030   cpu : 59.901524
+ MFLOPS measured : 129.272109   cpu : 58.719859
+
+- all.sh
+	/bin/cp himenoBMTxpa.c /root/commands0.sh /root/commands1.sh /var/www/html/
+
+	max=4
+	for ((i=0; i < $max; i++)); do
+		docker run -e http_proxy=http://cache.cc.kogakuin.ac.jp:8080/ -e https_proxy=http://cache.cc.kogakuin.ac.jp:8080/ -e ftp_proxy=http://cache.cc.kogakuin.ac.jp:8080/ -t -i -d --name cont$i centos:centos6 /bin/bash
+	done
+
+	docker ps | grep -v ^CONT | awk '{print "docker exec -i -t "$1" yum -y install wget"}' > _.sh
+	sh _.sh
+
+	docker ps | grep -v ^CONT | awk '{print "docker exec -i -t "$1" wget --no-proxy http://172.17.0.1/commands0.sh -O /root/commands0.sh"}' > _.sh
+	sh _.sh
+	docker ps | grep -v ^CONT | awk '{print "docker exec -i -t "$1" wget --no-proxy http://172.17.0.1/commands1.sh -O /root/commands1.sh"}' > _.sh
+	sh _.sh
+
+	docker ps | grep -v ^CONT | awk '{print "docker exec -i -t "$1" sh /root/commands0.sh"}' > _.sh
+	sh _.sh
+	docker ps | grep -v ^CONT | awk '{print "docker exec -t "$1" sh /root/commands1.sh &"}' > _.sh
+	sh _.sh
+
+- commands0.sh
+	cd /root/
+	yum -y install gcc
+	wget --no-proxy http://172.17.0.1/himenoBMTxpa.c -O himenoBMTxpa.c
+	gcc himenoBMTxpa.c -o himenoBMTxpa
+	rm -f /root/himeno.txt
+	#date >> /root/himeno.txt
+	#echo L | /root/himenoBMTxpa >> /root/himeno.txt
+	#date >> /root/himeno.txt
+	#echo L | /root/himenoBMTxpa >> /root/himeno.txt
+	#date >> /root/himeno.txt
+	#echo L | /root/himenoBMTxpa >> /root/himeno.txt
+	#date >> /root/himeno.txt
+	#echo Fin!
+
+- commands1.sh
+	cd /root/
+	#yum -y install gcc
+	#wget --no-proxy http://172.17.0.1/himenoBMTxpa.c -O himenoBMTxpa.c
+	#gcc himenoBMTxpa.c -o himenoBMTxpa
+	#rm -f /root/himeno.txt
+	date >> /root/himeno.txt
+	echo S | /root/himenoBMTxpa >> /root/himeno.txt
+	date >> /root/himeno.txt
+	echo S | /root/himenoBMTxpa >> /root/himeno.txt
+	date >> /root/himeno.txt
+	echo S | /root/himenoBMTxpa >> /root/himeno.txt
+	date >> /root/himeno.txt
+	echo Fin!
+
+---- webベンチ
+cd httpd/
+sh all.sh
+
+- all.sh
+	/bin/cp /root/.ssh/id_rsa.pub /root/httpd/commands_httpd0.sh /root/get_ipaddrs.sh /var/www/html/
+
+	max=4
+	for ((i=0; i < $max; i++)); do
+	        docker run -e http_proxy=http://cache.cc.kogakuin.ac.jp:8080/ -e https_proxy=http://cache.cc.kogakuin.ac.jp:8080/ -e ftp_proxy=http://cache.cc.kogakuin.ac.jp:8080/ -t -i -d --name httpd_cont$i centos:centos6 /bin/bash
+	done
+
+	docker ps | grep httpd_con | grep -v ^CONT | awk '{print "docker exec -i -t "$1" yum -y install wget"}' > /tmp/_.sh
+	sh /tmp/_.sh
+
+	docker ps | grep httpd_con | grep -v ^CONT | awk '{print "docker exec -t "$1" wget --no-proxy http://172.17.0.1/commands_httpd0.sh -O /root/commands_httpd0.sh"}' > /tmp/_.sh
+	sh /tmp/_.sh
+	docker ps | grep httpd_con | grep -v ^CONT | awk '{print "docker exec -t "$1" wget --no-proxy http://172.17.0.1/get_ipaddrs.sh -O /root/get_ipaddrs.sh"}' > /tmp/_.sh
+	sh /tmp/_.sh
+
+	docker ps | grep httpd_con | grep -v ^CONT | awk '{print "docker exec -t "$1" sh /root/commands_httpd0.sh"}' > /tmp/_.sh
+	sh /tmp/_.sh
+
+	docker ps | grep httpd_con | grep -v ^CONT | awk '{print "docker exec -t "$1" sh /root/get_ipaddrs.sh"}' > /tmp/_.sh
+	sh /tmp/_.sh > /tmp/ipaddrs.txt
+
+	awk '{print "ab -n 1000 http://"$1"/"}' < /tmp/ipaddrs.txt > /tmp/_.sh
+	sh /tmp/_.sh > ./_results_ab.txt
+
+	ruby web_random_access_bench_1_08.rb /tmp/ipaddrs.txt > ./_results_web_rand.txt
+
+
+- commands_httpd0.sh
+	yum -y install openssh-server
+	service sshd restart
+
+	mkdir /root/.ssh/
+	chmod 700 /root/.ssh/
+	wget --no-proxy http://172.17.0.1/id_rsa.pub -O /tmp/id_rsa.pub
+	touch /root/.ssh/authorized_keys
+	chomod 600 /root/.ssh/authorized_keys
+	cat /tmp/id_rsa.pub >> /root/.ssh/authorized_keys
+	rm -f /tmp/id_rsa.pub
+
+	yum -y install httpd
+	service httpd restart
+	echo hello > /var/www/html/index.html

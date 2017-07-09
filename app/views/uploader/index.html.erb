@@ -1,0 +1,25 @@
+<head>
+  <title>ファイル一覧</title>
+  <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <%= csrf_meta_tags %>
+</head>
+
+<h1>ファイル一覧</h1>
+
+<%= link_to 'アップロードはこちら', action: "form" %>
+
+    <table class="download">
+      <th class="number">番号</th>
+      <th class="date">アップロード日時</th>
+      <th class="comment">コメント</th>
+        <% UploadFile.all.reverse_order.each do |upload| %>
+      <tr>
+        <td class="number"><%= link_to upload.name, action: "download", id: upload.id %></td>
+        <td class="date"><%= upload.created_at.strftime("%y/%m/%d(#{%w(日 月 火 水 木 金 土)[Time.now.wday]})%H:%M") %>
+        <td class="comment"><%= simple_format(upload.comment) %></td>
+      </tr>
+      <% end %>
+    </table>
+
+<%= render 'shared/copyright' %>

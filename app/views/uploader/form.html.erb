@@ -1,0 +1,29 @@
+<head>
+  <title>ファイルのアップロード</title>
+  <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <%= csrf_meta_tags %>
+</head>
+
+<h1>ファイルのアップロード</h1>
+
+<p>
+  ◆◇◆◇◆◇使い方◆◇◆◇◆◇<br>
+  環境依存文字（絵文字など）は使用しないでください。
+</p>
+
+<% @upload = UploadFile.new %>
+  <%= form_for @upload, :url => {:action => :upload} do |f| %>
+  <%= f.label :name,"ファイル番号" %></br>
+  <%= f.text_field :name %></br></br>
+
+  <%= f.label :file,"ファイル" %></br>
+  <%= f.file_field :file %></br></br>
+
+  <%= f.label :comment,"コメント" %></br>
+  <%= f.text_area :comment ,:size=>"100x10"%></br></br>
+
+  <%= f.submit "Upload" %>
+<% end %>
+
+<%= render 'shared/copyright' %>

@@ -1,0 +1,20 @@
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+	. ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/bin
+
+export PATH
+export http_proxy=http://cache.cc.kogakuin.ac.jp:8080/
+# export http_proxy=http://cache.cc.kogakuin.ac.jp:3000/
+export https_proxy=http://cache.cc.kogakuin.ac.jp:8080/
+export ftp_proxy=http://cache.cc.kogakuin.ac.jp:8080/
+export LANG=C
+
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
